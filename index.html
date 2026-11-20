@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>진로 도서 아카이브</title>
+<style>
+/* 기존 사이트 디자인 */
+:root {
+  --bg: #f6f8f5;
+  --ink: #25352b;
+  --muted: #758178;
+  --line: #e1e8e1;
+  --mint: #eaf3eb;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Arial, "Noto Sans KR", sans-serif;
+}
+header {
+  background: #eaf3eb;
+  padding: 45px 24px;
+}
+.wrap, main {
+  max-width: 1050px;
+  margin: auto;
+}
+h1 {
+  font-size: 32px;
+}
+main {
+  padding: 25px 20px 45px;
+}
+.searchbox {
+  display: block;
+  margin-bottom: 28px;
+}
+.searchbox input {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(205px,1fr));
+  gap: 10px;
+}
+.cat {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+.cat.active {
+  background: var(--mint);
+  border-color: #6e9b7c;
+}
+.booklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+  gap: 11px;
+}
+.book {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 16px;
+}
+.book h3 {
+  font-size: 16px;
+}
+.author,.meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+.status {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 6px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.yes {
+  background: #e6f3e9;
+  color: #23623c;
+}
+.no {
+  background: #f0f1ef;
+  color: #626b65;
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+<div>CAREER × READING</div>
+<h1>진로 도서 아카이브</h1>
+<p>관심 있는 계열을 선택하고, 진로 탐색에 도움이 되는 책을 찾아보세요.</p>
+</div>
+</header>
+
+<main>
+<input id="search" type="search"
+placeholder="책 제목, 저자, 계열 검색">
+
+<h2>계열 선택</h2>
+<div class="categories" id="categories"></div>
+
+<section>
+<h2 id="heading">전체 도서</h2>
+<div id="count"></div>
+<div class="booklist" id="books"></div>
+</section>
+</main>
+
+<script>
+const groups = [
+{
+name:"인문·어문 계열",
+desc:"국어국문 · 영어영문 · 문예창작 등",
+books:[
+["공정하다는 착각","마이클 샌델","332.6 샌28ㄱ",true,"2.5층 폐가제"],
+["단어가 품은 세계","황선엽","",false,""],
+["빌 브라이슨 언어의 탄생","빌 브라이슨","740.9 브292ㅇ",true,"2층"]
+]
+},
+{
+name:"철학·역사·종교 계열",
+desc:"철학과 · 사학과 · 종교학과 등",
+books:[
+["서양철학사","버트런드 러셀","",false,""],
+["지식과 이성","","",false,""]
+]
+}
+];
+
+let selected = -1;
+
+const $ = id => document.getElementById(id);
+
+function renderCategories(){
+  $("categories").innerHTML =
+  `<button class="cat ${selected===-1?'active':''}"
+  onclick="selectCategory(-1)">
+  <strong>전체 보기</strong>
+  </button>` +
+  groups.map((g,i)=>`
+  <button class="cat ${selected===i?'active':''}"
+  onclick="selectCategory(${i})">
+  <strong>${g.name}</strong>
+  <small>${g.desc}</small>
+  </button>`).join("");
+}
+
+function selectCategory(i){
+  selected=i;
+  renderCategories();
+  renderBooks();
+}
+
+function renderBooks(){
+  const q=$("search").value.trim().toLowerCase();
+  let entries=[];
+
+  groups.forEach((g,i)=>{
+    if(selected!==-1 && selected!==i)return;
+    g.books.forEach(b=>{
+      if([g.name,...b].join(" ").toLowerCase().includes(q)){
+        entries.push({g:g.name,b});
+      }
+    });
+  });
+
+  $("heading").textContent =
+  selected===-1?"전체 도서":groups[selected].name;
+
+  $("count").textContent=`총 ${entries.length}권`;
+
+  $("books").innerHTML=entries.length
+  ? entries.map(({g,b})=>`
+    <article class="book">
+      <h3>${b[0]}</h3>
+      <div class="author">${b[1]}</div>
+      <div class="meta">${g}</div>
+      ${b[2]?`<div class="meta">청구기호: ${b[2]}</div>`:""}
+      <span class="status ${b[3]?'yes':'no'}">
+        ${b[3]?'○ 도서관 소장':'X 도서관 미소장'}
+      </span>
+      <div class="meta">${b[4]}</div>
+    </article>
+  `).join("")
+  :'<p>검색 결과가 없습니다.</p>';
+}
+
+$("search").addEventListener("input",renderBooks);
+
+renderCategories();
+renderBooks();
+</script>
+
+</body>
+</html>
